@@ -1,0 +1,9 @@
+{% extends "html/base.html" %}
+
+{% block content %}
+ {% for blog in blogs %}
+   {{blog.render()  | safe}}
+   <br><br>
+ {% endfor %}
+
+{% endblock %}
