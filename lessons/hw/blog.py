@@ -21,6 +21,10 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+def render_post(response, blog):
+    response.out.write('<b>' + blog.title + '</b><br>')
+    response.out.write(blog.blog)
+
 def blog_key(name = 'default'):
     return db.key.from_path('blogs', name)
 
@@ -36,15 +40,17 @@ class Blog(db.Model):
         self._render = self.content.replace('\n', '<br>')
         return render_str('html/post.html', p = self)
 
-#Front Page listing 10 most recent blog entries
-class MainPage(Handler):
 
-    def render_front(self):
-        blogs = db.GqlQuery("SELECT * FROM Blog ORDER BY created DESC LIMIT 10")
-        self.render("html/front_page.html", blogs=blogs)
+class MainPage(Handler):
+  def get(self):
+      self.write('Alis Blog!')
+
+#Front Page listing 10 most recent blog entries
+class BlogFront(Handler):
 
     def get(self):
-        self.render_front()
+        blogs = db.GqlQuery("SELECT * FROM Blog ORDER BY created DESC LIMIT 10")
+        self.render("html/front_page.html", blogs=blogs)
 
 
 #NewPost Page
@@ -60,9 +66,9 @@ class NewPost(Handler):
         blog = self.request.get("blog")
     #Storing the title and blog in the datastore
         if title and blog:
-            a = Blog(parent = blog_key(), title=title, blog = blog)
+            a = Blog(parent = blog_key(),title=title, blog = blog)
             a.put()
-            self.redirect("html/post/%s" % str.a.key() )
+            self.redirect("/blog/%s" % str(a.key().id()) )
     #Error handling
         else:
             error = "You need to enter a title and some blogwork. Thanks!"
@@ -84,4 +90,4 @@ class PostPage(Handler):
 
 
 #Mapping of handlers to their urls
-app = webapp2.WSGIApplication([('/blog/newpost', NewPost),('/blog', MainPage), ('/blog/[0-9]+', PostPage)],debug=True)
+app = webapp2.WSGIApplication([('/blog/newpost', NewPost),('/', MainPage), ('/blog/?', BlogFront), ('/blog/[0-9]+', PostPage)],debug=True)
