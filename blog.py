@@ -25,6 +25,11 @@ class BlogHandler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+    def set_cookie(self, name, value):
+        name = str(name)
+        value = str(value)
+        self.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name,value))
+
 def render_post(response, post):
     response.out.write('<b>' + post.subject + '</b><br>')
     response.out.write(post.content)
@@ -50,7 +55,7 @@ class Post(db.Model):
 
 class BlogFront(BlogHandler):
     def get(self):
-        posts = db.GqlQuery("select * from Post order by created desc limit 10")
+        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
         self.render('front.html', posts = posts)
 
 class PostPage(BlogHandler):
@@ -82,18 +87,6 @@ class NewPost(BlogHandler):
 
 
 
-###### Unit 2 HW's
-class Rot13(BlogHandler):
-    def get(self):
-        self.render('rot13-form.html')
-
-    def post(self):
-        rot13 = ''
-        text = self.request.get('text')
-        if text:
-            rot13 = text.encode('rot13')
-
-        self.render('rot13-form.html', text = rot13)
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -141,20 +134,21 @@ class Signup(BlogHandler):
         if have_error:
             self.render('signup-form.html', **params)
         else:
-            self.redirect('/unit2/welcome?username=' + username)
+            self.set_cookie('username',username)
+            self.redirect('/welcome')
 
 class Welcome(BlogHandler):
     def get(self):
-        username = self.request.get('username')
+
+        username = self.request.cookies.get('username')
         if valid_username(username):
             self.render('welcome.html', username = username)
         else:
-            self.redirect('/unit2/signup')
+            self.redirect('/signup')
 
 app = webapp2.WSGIApplication([('/', MainPage),
-                               ('/unit2/rot13', Rot13),
-                               ('/unit2/signup', Signup),
-                               ('/unit2/welcome', Welcome),
+                               ('/signup', Signup),
+                               ('/welcome', Welcome),
                                ('/blog/?', BlogFront),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
