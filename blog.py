@@ -87,6 +87,7 @@ def users_key(group = 'default'):
     return db.Key.from_path('users', group)
 
 class User(db.Model):
+    user_id = db.Key()
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     email = db.StringProperty()
@@ -104,6 +105,7 @@ class User(db.Model):
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
         return User(parent = users_key(),
+                    user_id = db.Key(),
                     name = name,
                     pw_hash = pw_hash,
                     email = email)
@@ -121,6 +123,7 @@ def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
 
 class Post(db.Model):
+    user_id = db.StringProperty(required = True)
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -159,9 +162,11 @@ class NewPost(BlogHandler):
 
         subject = self.request.get('subject')
         content = self.request.get('content')
+        user_id = self.read_secure_cookie('user_id')[0]
+
 
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content)
+            p = Post(parent = blog_key(),user_id = user_id, subject = subject, content = content)
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
