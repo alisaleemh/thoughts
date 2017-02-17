@@ -12,4 +12,8 @@
   <div class="post-content">
     {{p._render_text | safe}}
   </div>
+  <div> <form  method="post">
+          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+          <input type="Submit" value="Delete" />
+        </form>
 </div>

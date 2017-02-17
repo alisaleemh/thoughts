@@ -129,6 +129,11 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
 
+    @classmethod
+    def by_user_id(cls, user_id):
+        p = Post.all().filter('user_id =', user_id).get()
+        return p
+
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
@@ -137,6 +142,15 @@ class BlogFront(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
         self.render('front.html', posts = posts)
+    def post(self):
+        #Get the post user ID
+        post_user_id = self.request.get('post_user_id')
+
+        if post_user_id:
+            post_object = Post.by_user_id(post_user_id)
+            post_object.delete()
+            self.get()
+
 
 class PostPage(BlogHandler):
     def get(self, post_id):
