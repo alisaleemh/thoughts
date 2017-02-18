@@ -1,7 +1,7 @@
 <div class="post">
   <div class="post-heading">
     <div class="post-title">
-        {{p.subject}},{{p.user_id}}
+      {{p.subject}},{{p.user_id}}
     </div>
 
     <div class="post-date">
@@ -13,7 +13,10 @@
     {{p._render_text | safe}}
   </div>
   <div> <form  method="post">
-          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-          <input type="Submit" value="Delete" />
-        </form>
+    <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+    <input type="submit" value="Delete" />
+  </form>
+  
+  <div class="error">{{error}}</div>
+</div>
 </div>

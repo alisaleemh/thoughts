@@ -134,34 +134,46 @@ class Post(db.Model):
         p = Post.all().filter('user_id =', user_id).get()
         return p
 
-    def render(self):
+    def render(self, error = None):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        if error:
+            return render_str("post.html", p = self, error = error)
+        else:
+            return render_str("post.html", p = self)
 
 class BlogFront(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
         self.render('front.html', posts = posts)
-    def post(self):
-        #Get the post user ID
-        post_user_id = self.request.get('post_user_id')
 
-        if post_user_id:
-            post_object = Post.by_user_id(post_user_id)
-            post_object.delete()
-            self.get()
+
 
 
 class PostPage(BlogHandler):
-    def get(self, post_id):
+    def get(self, post_id, error = None):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-
         if not post:
             self.error(404)
             return
+        if error:
+            self.render("permalink.html", post = post, error = error)
+        else:
+            self.render("permalink.html", post = post)
 
-        self.render("permalink.html", post = post)
+
+    def post(self,post_id):
+        #Get the post user ID
+        post_user_id = self.request.get('post_user_id')
+        session_user_id = self.read_secure_cookie('user_id')[0]
+        if post_user_id:
+            if int(post_user_id) == int(session_user_id):
+                post_object = Post.by_user_id(post_user_id)
+                post_object.delete()
+                self.redirect("/blog")
+            else:
+                error = "You can only delete your own post"
+                self.get(post_id, error)
 
 class NewPost(BlogHandler):
     def get(self):
