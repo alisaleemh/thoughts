@@ -4,6 +4,7 @@ import random
 import hashlib
 import hmac
 from string import letters
+import time
 
 import webapp2
 import jinja2
@@ -101,6 +102,8 @@ class User(db.Model):
         u = User.all().filter('name =', name).get()
         return u
 
+
+
     @classmethod
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
@@ -137,14 +140,36 @@ class Post(db.Model):
     def render(self, error = None):
         self._render_text = self.content.replace('\n', '<br>')
         if error:
-            return render_str("post.html", p = self, error = error)
+            return render_str("post.html", p = self, error = error, u = User.by_id(int(self.user_id)))
         else:
-            return render_str("post.html", p = self)
+            return render_str("post.html", p = self, u = User.by_id(int(self.user_id)))
+
+    def render_front(self, error = None):
+        self._render_text = self.content.replace('\n', '<br>')
+        if error:
+            return render_str("front-post.html", p = self, error = error, u = User.by_id(int(self.user_id)))
+        else:
+            return render_str("front-post.html", p = self, u = User.by_id(int(self.user_id)))
 
 class BlogFront(BlogHandler):
-    def get(self):
+    def get(self, error = None):
         posts = greetings = Post.all().order('-created')
-        self.render('front.html', posts = posts)
+        self.render('front.html', posts = posts, error = error)
+
+    def post(self):
+        #Get the post user ID
+        post_user_id = self.request.get('post_user_id')
+        session_user_id = self.read_secure_cookie('user_id')
+        if post_user_id:
+            if session_user_id != '':
+                if int(post_user_id) == int(session_user_id):
+                    post_object = Post.by_user_id(post_user_id)
+                    post_object.delete()
+                    time.sleep(0.1)
+                    self.redirect("/blog")
+            else:
+                error = "You can only delete your own post"
+                self.get(error)
 
 
 
@@ -165,11 +190,12 @@ class PostPage(BlogHandler):
     def post(self,post_id):
         #Get the post user ID
         post_user_id = self.request.get('post_user_id')
-        session_user_id = self.read_secure_cookie('user_id')[0]
-        if post_user_id:
+        session_user_id = self.read_secure_cookie('user_id')
+        if post_user_id and session_user_id:
             if int(post_user_id) == int(session_user_id):
                 post_object = Post.by_user_id(post_user_id)
                 post_object.delete()
+                time.sleep(0.1)
                 self.redirect("/blog")
             else:
                 error = "You can only delete your own post"
@@ -188,7 +214,7 @@ class NewPost(BlogHandler):
 
         subject = self.request.get('subject')
         content = self.request.get('content')
-        user_id = self.read_secure_cookie('user_id')[0]
+        user_id = self.read_secure_cookie('user_id')
 
 
         if subject and content:
