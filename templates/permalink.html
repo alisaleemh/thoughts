@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if error %}
+  {{post.render(error) | safe}}
+{% else %}
   {{post.render() | safe}}
+{% endif %}
 {% endblock %}

@@ -1,0 +1,22 @@
+- Key - Parent concept
+- Front end styling
+-
+
+class Like(db.Model)
+  postid = Integer
+  likecount = Integer, default=0
+  user id = ListProperty( [1,2,3,34]
+  for u in user_id
+    if u = self.user.key.id
+      return
+
+
+likeobj = Like(postid=postid, likecount=1)
+likeobj.append(self.user.key.userid)
+
+class Comment
+  postid = int
+  user_id = int
+  commentstr = string
+
+  abhighosh18

@@ -3,7 +3,7 @@
 {% block content %}
 
   {% for p in posts %}
-    {{ p.render() | safe }}
+    {{ p.render_front() | safe }}
     <br><br>
   {% endfor %}
 

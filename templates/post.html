@@ -1,7 +1,8 @@
-<div class="post">
-  <div class="post-heading">
+ <div class="post">
+  <div class="post-heading" >
     <div class="post-title">
-      {{p.subject}}
+      <div> <a href="/blog/{{p.key().id()}}">{{p.subject}},{{u.name}}
+      </div>
     </div>
 
     <div class="post-date">
@@ -12,4 +13,11 @@
   <div class="post-content">
     {{p._render_text | safe}}
   </div>
+  <div> <form  method="post">
+    <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+    <input type="submit" value="Delete" />
+  </form>
+
+  <div class="error">{{error}}</div>
+</div>
 </div>

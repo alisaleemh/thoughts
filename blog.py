@@ -4,6 +4,7 @@ import random
 import hashlib
 import hmac
 from string import letters
+import time
 
 import webapp2
 import jinja2
@@ -87,6 +88,7 @@ def users_key(group = 'default'):
     return db.Key.from_path('users', group)
 
 class User(db.Model):
+    user_id = db.Key()
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     email = db.StringProperty()
@@ -100,10 +102,13 @@ class User(db.Model):
         u = User.all().filter('name =', name).get()
         return u
 
+
+
     @classmethod
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
         return User(parent = users_key(),
+                    user_id = db.Key(),
                     name = name,
                     pw_hash = pw_hash,
                     email = email)
@@ -121,30 +126,80 @@ def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
 
 class Post(db.Model):
+    user_id = db.StringProperty(required = True)
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
 
-    def render(self):
+    @classmethod
+    def by_user_id(cls, user_id):
+        p = Post.all().filter('user_id =', user_id).get()
+        return p
+
+    def render(self, error = None):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        if error:
+            return render_str("post.html", p = self, error = error, u = User.by_id(int(self.user_id)))
+        else:
+            return render_str("post.html", p = self, u = User.by_id(int(self.user_id)))
+
+    def render_front(self, error = None):
+        self._render_text = self.content.replace('\n', '<br>')
+        if error:
+            return render_str("front-post.html", p = self, error = error, u = User.by_id(int(self.user_id)))
+        else:
+            return render_str("front-post.html", p = self, u = User.by_id(int(self.user_id)))
 
 class BlogFront(BlogHandler):
-    def get(self):
+    def get(self, error = None):
         posts = greetings = Post.all().order('-created')
-        self.render('front.html', posts = posts)
+        self.render('front.html', posts = posts, error = error)
+
+    def post(self):
+        #Get the post user ID
+        post_user_id = self.request.get('post_user_id')
+        session_user_id = self.read_secure_cookie('user_id')
+        if post_user_id:
+            if session_user_id != '':
+                if int(post_user_id) == int(session_user_id):
+                    post_object = Post.by_user_id(post_user_id)
+                    post_object.delete()
+                    time.sleep(0.1)
+                    self.redirect("/blog")
+            else:
+                error = "You can only delete your own post"
+                self.get(error)
+
+
+
 
 class PostPage(BlogHandler):
-    def get(self, post_id):
+    def get(self, post_id, error = None):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-
         if not post:
             self.error(404)
             return
+        if error:
+            self.render("permalink.html", post = post, error = error)
+        else:
+            self.render("permalink.html", post = post)
 
-        self.render("permalink.html", post = post)
+
+    def post(self,post_id):
+        #Get the post user ID
+        post_user_id = self.request.get('post_user_id')
+        session_user_id = self.read_secure_cookie('user_id')
+        if post_user_id and session_user_id:
+            if int(post_user_id) == int(session_user_id):
+                post_object = Post.by_user_id(post_user_id)
+                post_object.delete()
+                time.sleep(0.1)
+                self.redirect("/blog")
+            else:
+                error = "You can only delete your own post"
+                self.get(post_id, error)
 
 class NewPost(BlogHandler):
     def get(self):
@@ -159,9 +214,11 @@ class NewPost(BlogHandler):
 
         subject = self.request.get('subject')
         content = self.request.get('content')
+        user_id = self.read_secure_cookie('user_id')
+
 
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content)
+            p = Post(parent = blog_key(),user_id = user_id, subject = subject, content = content)
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
