@@ -20,3 +20,10 @@ class Comment
   commentstr = string
 
   abhighosh18
+
+
+  {% if comment %}
+    {% for c in comment %}
+      {{ c.render() | safe }}
+    {% endfor %}
+  {% endif %}

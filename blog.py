@@ -29,6 +29,32 @@ def check_secure_val(secure_val):
     if secure_val == make_secure_val(val):
         return val
 
+def render_post(response, post):
+    response.out.write('<b>' + post.subject + '</b><br>')
+    response.out.write(post.content)
+
+##### user stuff
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
+
+def make_pw_hash(name, pw, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
+
+def users_key(group = 'default'):
+    return db.Key.from_path('users', group)
+
+##### blog stuff
+
+def blog_key(name = 'default'):
+    return db.Key.from_path('blogs', name)
+
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -61,31 +87,11 @@ class BlogHandler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
-def render_post(response, post):
-    response.out.write('<b>' + post.subject + '</b><br>')
-    response.out.write(post.content)
 
 class MainPage(BlogHandler):
   def get(self):
       self.write('Hello, Udacity!')
 
-
-##### user stuff
-def make_salt(length = 5):
-    return ''.join(random.choice(letters) for x in xrange(length))
-
-def make_pw_hash(name, pw, salt = None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
-
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
-
-def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
 
 class User(db.Model):
     user_id = db.Key()
@@ -119,13 +125,8 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
-
-##### blog stuff
-
-def blog_key(name = 'default'):
-    return db.Key.from_path('blogs', name)
-
 class Post(db.Model):
+    post_id = db.Key()
     user_id = db.StringProperty(required = True)
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
@@ -137,19 +138,44 @@ class Post(db.Model):
         p = Post.all().filter('user_id =', user_id).get()
         return p
 
-    def render(self, error = None):
+    def render(self, comment = None, error = None):
         self._render_text = self.content.replace('\n', '<br>')
         if error:
             return render_str("post.html", p = self, error = error, u = User.by_id(int(self.user_id)))
         else:
             return render_str("post.html", p = self, u = User.by_id(int(self.user_id)))
 
+#Duplicated render function to render front-post.html to exclude delete and comment
     def render_front(self, error = None):
         self._render_text = self.content.replace('\n', '<br>')
         if error:
             return render_str("front-post.html", p = self, error = error, u = User.by_id(int(self.user_id)))
         else:
             return render_str("front-post.html", p = self, u = User.by_id(int(self.user_id)))
+
+
+
+
+class Comment(db.Model):
+    user_id = db.StringProperty(required = True)
+    post_id = db.StringProperty(required = True)
+    comment = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    last_modified = db.DateTimeProperty(auto_now = True)
+
+    @classmethod
+    def by_user_id(cls, user_id):
+        c = Comment.all().filter('user_id =', user_id).get()
+        return c
+    @classmethod
+    def by_post_id(cls, post_id):
+        c = Comment.all().filter('post_id =', post_id).get()
+        return c
+
+    def render(self):
+        self._render_text = self.comment.replace('\n', '<br>')
+        return render_str("comment.html", c = self )
+
 
 class BlogFront(BlogHandler):
     def get(self, error = None):
@@ -171,27 +197,40 @@ class BlogFront(BlogHandler):
                 error = "You can only delete your own post"
                 self.get(error)
 
-
+class CommentPage(BlogHandler):
+    def get(self):
+        comments =  Comment.all()
+        #comments = Comment.by_post_id(int(4785074604081152))
+        self.render("comment-test.html", comments = comments)
 
 
 class PostPage(BlogHandler):
     def get(self, post_id, error = None):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+        comments = Comment.all()
         if not post:
             self.error(404)
             return
-        if error:
-            self.render("permalink.html", post = post, error = error)
+        if comments:
+            if error:
+                self.render("permalink.html", post = post, comments = comments, error = error)
+            else:
+                self.render("permalink.html", post = post, comments = comments)
         else:
-            self.render("permalink.html", post = post)
-
+            if error:
+                self.render("permalink.html", post = post, error = error)
+            else:
+                self.render("permalink.html", post = post)
 
     def post(self,post_id):
+        session_user_id = self.read_secure_cookie('user_id')
         #Get the post user ID
         post_user_id = self.request.get('post_user_id')
-        session_user_id = self.read_secure_cookie('user_id')
-        if post_user_id and session_user_id:
+        delete_comment = self.request.get('delete_comment')
+        add_comment = self.request.get('add_comment')
+        #delete functionality
+        if delete_comment:
             if int(post_user_id) == int(session_user_id):
                 post_object = Post.by_user_id(post_user_id)
                 post_object.delete()
@@ -200,6 +239,20 @@ class PostPage(BlogHandler):
             else:
                 error = "You can only delete your own post"
                 self.get(post_id, error)
+        #Add comment
+        if add_comment:
+            comment = self.request.get('comment')
+            if int(post_user_id) != int(session_user_id):
+                c = Comment(user_id = session_user_id, post_id=post_id,comment = comment)
+                c.put()
+                time.sleep(0.1)
+                self.redirect("/blog/%s" % post_id)
+            else:
+                error = "You cannot comment on your own post"
+                self.get(post_id,error)
+
+
+
 
 class NewPost(BlogHandler):
     def get(self):
@@ -224,6 +277,9 @@ class NewPost(BlogHandler):
         else:
             error = "subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
+
+
+
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -327,5 +383,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/login', Login),
                                ('/logout', Logout),
                                ('/welcome', Welcome),
+                               ('/comment', CommentPage)
                                ],
                               debug=True)
