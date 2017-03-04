@@ -8,7 +8,7 @@
 {% endif %}
 
 {% for c in comments %}
-  {{ c.render() | safe }}
+  {{ c.render(session_user_id) | safe }}
   <br><br>
   {% endfor %}
 

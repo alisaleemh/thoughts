@@ -12,8 +12,8 @@ import jinja2
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                               autoescape = True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                               autoescape=True)
 
 secret = 'fart'
 
@@ -25,7 +25,7 @@ def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
 
 def check_secure_val(secure_val):
-    val = secure_val.split('|')[0]
+    val=secure_val.split('|')[0]
     if secure_val == make_secure_val(val):
         return val
 
@@ -34,7 +34,7 @@ def render_post(response, post):
     response.out.write(post.content)
 
 ##### user stuff
-def make_salt(length = 5):
+def make_salt(length=5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
 def make_pw_hash(name, pw, salt = None):
@@ -90,7 +90,7 @@ class BlogHandler(webapp2.RequestHandler):
 
 class MainPage(BlogHandler):
   def get(self):
-      self.write('Hello, Udacity!')
+      self.redirect('/blog')
 
 
 class User(db.Model):
@@ -167,14 +167,19 @@ class Comment(db.Model):
     def by_user_id(cls, user_id):
         c = Comment.all().filter('user_id =', user_id).get()
         return c
+
     @classmethod
     def by_post_id(cls, post_id):
-        c = Comment.all().filter('post_id =', post_id).get()
+        c = Comment.all().filter('post_id =', post_id).fetch(999999)
         return c
 
-    def render(self):
+    @classmethod
+    def by_id (cls, comment_id):
+        c = Commen
+
+    def render(self, session_user_id):
         self._render_text = self.comment.replace('\n', '<br>')
-        return render_str("comment.html", c = self )
+        return render_str("comment.html", c = self, session_user_id = session_user_id )
 
 
 class BlogFront(BlogHandler):
@@ -200,7 +205,6 @@ class BlogFront(BlogHandler):
 class CommentPage(BlogHandler):
     def get(self):
         comments =  Comment.all()
-        #comments = Comment.by_post_id(int(4785074604081152))
         self.render("comment-test.html", comments = comments)
 
 
@@ -208,29 +212,35 @@ class PostPage(BlogHandler):
     def get(self, post_id, error = None):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        comments = Comment.all()
+        comments = Comment.by_post_id(post_id)
+        #Session user Id needs validation for displaying delete button
+        session_user_id = self.read_secure_cookie('user_id')
         if not post:
             self.error(404)
             return
         if comments:
             if error:
-                self.render("permalink.html", post = post, comments = comments, error = error)
+                self.render("permalink.html", post = post, comments = comments, error = error, session_user_id = session_user_id)
             else:
-                self.render("permalink.html", post = post, comments = comments)
+                self.render("permalink.html", post = post, comments = comments, session_user_id = session_user_id)
         else:
             if error:
-                self.render("permalink.html", post = post, error = error)
+                self.render("permalink.html", post = post, error = error, session_user_id = session_user_id)
             else:
-                self.render("permalink.html", post = post)
+                self.render("permalink.html", post = post, session_user_id = session_user_id)
 
     def post(self,post_id):
         session_user_id = self.read_secure_cookie('user_id')
-        #Get the post user ID
+        #Get the post user ID from hidden input
         post_user_id = self.request.get('post_user_id')
-        delete_comment = self.request.get('delete_comment')
+
+        #Get the hidden inputs to decide which functionality is required
+        delete_post = self.request.get('delete_post')
         add_comment = self.request.get('add_comment')
+        delete_comment = self.request.get('delete_comment')
+
         #delete functionality
-        if delete_comment:
+        if delete_post:
             if int(post_user_id) == int(session_user_id):
                 post_object = Post.by_user_id(post_user_id)
                 post_object.delete()
@@ -239,10 +249,11 @@ class PostPage(BlogHandler):
             else:
                 error = "You can only delete your own post"
                 self.get(post_id, error)
+
         #Add comment
         if add_comment:
             comment = self.request.get('comment')
-            if int(post_user_id) != int(session_user_id):
+            if int(post_user_id) == int(session_user_id):
                 c = Comment(user_id = session_user_id, post_id=post_id,comment = comment)
                 c.put()
                 time.sleep(0.1)
@@ -250,7 +261,17 @@ class PostPage(BlogHandler):
             else:
                 error = "You cannot comment on your own post"
                 self.get(post_id,error)
-
+#############
+        if delete_comment:
+            comment_id = self.request.get('comment_id')
+            key = db.Key.from_path('Comment', int(comment_id))
+            comment_object = db.get(key)
+            comment_object.delete()
+            time.sleep(0.1)
+            self.redirect("/blog/%s" % post_id)
+        else:
+            error = "You can only delete your own post"
+            self.get(post_id, error)
 
 
 
