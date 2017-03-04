@@ -1,0 +1,12 @@
+<div class="comment">
+  <div>
+    {{c._render_text | safe}}
+    PostID: {{c.post_id}} UserID: {{c.user_id}}
+  </div>
+
+  <form method="post">
+    <input name="delete_comment" type="hidden" value="1" />
+    <input name="comment_id" type="hidden" value="{{c.key().id()}}"/>
+    <input type="submit" value="Delete Comment" />
+  </form>
+</div>

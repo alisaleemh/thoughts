@@ -6,4 +6,10 @@
 {% else %}
   {{post.render() | safe}}
 {% endif %}
+
+{% for c in comments %}
+  {{ c.render(session_user_id) | safe }}
+  <br><br>
+  {% endfor %}
+
 {% endblock %}
