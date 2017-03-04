@@ -18,13 +18,13 @@
       <form  method="post">
         <input name="delete_post" type="hidden" value="1" />
         <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-        <input type="submit" value="Delete" />
+        <input type="submit" value="Delete Post" />
       </form>
 
       <div class="error">{{error}}</div>
+
       <form method="post">
         <div> Comment: </div>
-
         <label>
           <textarea name="comment"></textarea>
         </label>
@@ -32,5 +32,14 @@
         <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
         <input type="submit" value="Add Comment">
       </form>
+
+      <div>
+        <form  method="post">
+          <input name="edit_post" type="hidden" value="1" />
+          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+          <input type="submit" value="Edit Post" />
+        </form>
+
+
     </div>
   </div>

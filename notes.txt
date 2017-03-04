@@ -1,6 +1,7 @@
-- Key - Parent concept
-- Front end styling
--
+============================
+Implement Like functionality:
+
+Like Model
 
 class Like(db.Model)
   postid = Integer
@@ -9,21 +10,15 @@ class Like(db.Model)
   for u in user_id
     if u = self.user.key.id
       return
-
-
 likeobj = Like(postid=postid, likecount=1)
 likeobj.append(self.user.key.userid)
 
-class Comment
-  postid = int
-  user_id = int
-  commentstr = string
+==================================
+Ability to Edit Posts and Comment
 
-  abhighosh18
-
-
-  {% if comment %}
-    {% for c in comment %}
-      {{ c.render() | safe }}
-    {% endfor %}
-  {% endif %}
+- Add handler to app with regex matching 'blog/([0-9]+/editpost)'
+- Add Edit Post handler which takes in the post id, should be identical to NewPost
+- Modify post method to redirect to editpost handler which error handling logic if not post owner
+- Add button in post.html to redirect to edit post handler
+- Create edit_post.html
+- Modify get and post methods
