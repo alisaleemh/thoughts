@@ -166,6 +166,7 @@ class Post(db.Model):
 
 
 class Comment(db.Model):
+    comment_id = db.Key()
     user_id = db.StringProperty(required=True)
     post_id = db.StringProperty(required=True)
     comment = db.TextProperty(required=True)
@@ -217,6 +218,7 @@ class BlogFront(BlogHandler):
                 error = "You can only delete your own post"
                 self.get(error)
 
+
 class CommentPage(BlogHandler):
     def get(self):
         comments = Comment.all()
@@ -254,6 +256,7 @@ class PostPage(BlogHandler):
         add_comment = self.request.get('add_comment')
         delete_comment = self.request.get('delete_comment')
         edit_post = self.request.get('edit_post')
+        edit_comment = self.request.get('edit_comment')
 
         # delete functionality
         if delete_post:
@@ -269,13 +272,17 @@ class PostPage(BlogHandler):
         # Add comment
         if add_comment:
             comment = self.request.get('comment')
-            if int(post_user_id) == int(session_user_id):
-                c = Comment(user_id=session_user_id, post_id=post_id,
-                            comment=comment)
-                c.put()
-                time.sleep(0.1)
-                self.redirect("/blog/%s" % post_id)
+            if comment:
+                if int(post_user_id) == int(session_user_id):
+                    c = Comment(user_id=session_user_id, post_id=post_id, comment=comment)
+                    c.put()
+                    time.sleep(0.1)
+                    self.redirect("/blog/%s" % post_id)
+            else:
+                error = 'Please enter a comment!'
+                self.get(post_id, error)
 
+        # Delete Comment
         if delete_comment:
             comment_id = self.request.get('comment_id')
             key = db.Key.from_path('Comment', int(comment_id))
@@ -288,9 +295,22 @@ class PostPage(BlogHandler):
             error = "You can only delete your own post"
             self.get(post_id, error)
 
+        # Edit Post
         if edit_post:
             if int(post_user_id) == int(session_user_id):
                 self.redirect("/blog/%s/editpost" % post_id)
+        # TODO Error Implementation
+
+        if edit_comment:
+            comment_id = self.request.get('comment_id')
+            key = db.Key.from_path('Comment', int(comment_id))
+            comment = db.get(key)
+            if int(comment.user_id) == int(session_user_id):
+                self.redirect("/blog/%s/editcomment/%s" % (post_id, comment_id))
+            # TODO Error Implementation
+
+
+
 
 
 class NewPost(BlogHandler):
@@ -336,12 +356,38 @@ class EditPost(BlogHandler):
         if subject and content:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             p = db.get(key)
-            p = Post(key=key, parent=blog_key(),user_id=user_id, subject=subject, content=content)
+            p = Post(key=key, parent=blog_key(), user_id=user_id, subject=subject, content=content)
             p.put()
             self.redirect('/blog/%s' % post_id)
         else:
             error = "Please enter both subject and content, please!"
             self.render("editpost.html", subject=subject, content=content, error=error)
+
+class EditComment(BlogHandler):
+    def get(self, post_id, comment_id):
+        if self.user:
+            print post_id, comment_id
+            key = db.Key.from_path('Comment', int(comment_id))
+            c = db.get(key)
+            comment = c.comment
+            self.render("editcomment.html", comment=comment)
+        else:
+            self.redirect("/blog/%s" % post_id)
+
+    def post(self, post_id, comment_id):
+        comment = self.request.get('comment')
+        user_id = self.read_secure_cookie('user_id')
+
+        if comment:
+            key = db.Key.from_path('Comment', int(comment_id))
+            c = db.get(key)
+            c = Comment(key=key, user_id=user_id, post_id=post_id, comment=comment)
+            c.put()
+            time.sleep(0.1)
+            self.redirect('/blog/%s' % post_id)
+        else:
+            error = "Please enter a comment!"
+            self.render("editpost.html", comment=comment, error=error)
 
 
 class Signup(BlogHandler):
@@ -396,6 +442,7 @@ class Register(Signup):
             self.login(u)
             self.redirect('/blog')
 
+
 class Login(BlogHandler):
     def get(self):
         self.render('login-form.html')
@@ -430,6 +477,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
                                ('/blog/([0-9]+)/editpost', EditPost),
+                               ('/blog/([0-9]+)/editcomment/([0-9]+)', EditComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),

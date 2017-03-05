@@ -9,4 +9,10 @@
     <input name="comment_id" type="hidden" value="{{c.key().id()}}"/>
     <input type="submit" value="Delete Comment" />
   </form>
+
+  <form  method="post">
+    <input name="edit_comment" type="hidden" value="1" />
+    <input name="comment_id" type="hidden" value="{{c.key().id()}}" />
+    <input type="submit" value="Edit Comment  " />
+  </form>
 </div>
