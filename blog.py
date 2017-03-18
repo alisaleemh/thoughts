@@ -17,6 +17,7 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
 
 secret = 'fart'
 
+
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
@@ -52,16 +53,22 @@ def users_key(group='default'):
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+
+
 def valid_username(username):
     return username and USER_RE.match(username)
 
 
 PASS_RE = re.compile(r"^.{3,20}$")
+
+
 def valid_password(password):
     return password and PASS_RE.match(password)
 
 
 EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+
+
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
@@ -107,7 +114,7 @@ class User(db.Model):
     user_id = db.Key()
     name = db.StringProperty(required=True)
     pw_hash = db.StringProperty(required=True)
-    email=db.StringProperty()
+    email = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -115,13 +122,17 @@ class User(db.Model):
 
     @classmethod
     def by_name(cls, name):
-        u=User.all().filter('name =', name).get()
+        u = User.all().filter('name =', name).get()
         return u
 
+    @classmethod
+    def by_post_id(cls, post_id):
+        u = User.all().filter('name =', post_id).get()
+        return u
 
     @classmethod
     def register(cls, name, pw, email=None):
-        pw_hash=make_pw_hash(name, pw)
+        pw_hash = make_pw_hash(name, pw)
         return User(parent=users_key(),
                     user_id=db.Key(),
                     name=name,
@@ -133,6 +144,7 @@ class User(db.Model):
         u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
+
 
 class Post(db.Model):
     post_id = db.Key()
@@ -147,7 +159,7 @@ class Post(db.Model):
         p = Post.all().filter('user_id =', user_id).get()
         return p
 
-    def render(self, comment=None, error=None):
+    def render(self, like, comment=None, error=None):
         self._render_text = self.content.replace('\n', '<br>')
         if error:
             return render_str("post.html", p=self, error=error, u=User.by_id(int(self.user_id)))
@@ -161,8 +173,6 @@ class Post(db.Model):
             return render_str("front-post.html", p=self, error=error, u=User.by_id(int(self.user_id)))
         else:
             return render_str("front-post.html", p=self, u=User.by_id(int(self.user_id)))
-
-
 
 
 class Comment(db.Model):
@@ -180,7 +190,7 @@ class Comment(db.Model):
 
     @classmethod
     def by_post_id(cls, post_id):
-        c = Comment.all().filter('post_id =', post_id).fetch(999999)
+        c = Comment.all().filter('post_id =', post_id).fetch(99999999)
         return c
 
     @classmethod
@@ -191,6 +201,18 @@ class Comment(db.Model):
     def render(self, session_user_id):
         self._render_text = self.comment.replace('\n', '<br>')
         return render_str("comment.html", c=self, session_user_id=session_user_id)
+
+
+class Like(db.Model):
+    like_id = db.Key()
+    like_count = db.IntegerProperty(required=True)
+    post_id = db.StringProperty(required=True)
+    post_user_id = db.ListProperty
+
+    @classmethod
+    def by_post_id(cls, post_id):
+        l = Like.all().filter('post_id =', post_id).get()
+        return l
 
 
 class MainPage(BlogHandler):
@@ -230,21 +252,24 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         comments = Comment.by_post_id(post_id)
+        likes = Like.by_post_id(post_id)
+        users = User.by_name('ali')
+
         # Session user Id needs validation for displaying delete button
         session_user_id = self.read_secure_cookie('user_id')
         if not post:
-            self.error(404)
+            self.error(404)  # Should never reach here
             return
         if comments:
             if error:
-                self.render("permalink.html", post=post, comments=comments, error=error, session_user_id=session_user_id)
+                self.render("permalink.html", post=post, comments=comments, error=error, likes=likes, session_user_id=session_user_id)
             else:
-                self.render("permalink.html", post=post, comments=comments, session_user_id=session_user_id)
+                self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id)
         else:
             if error:
-                self.render("permalink.html", post=post, error=error, session_user_id=session_user_id)
+                self.render("permalink.html", post=post, comments=comments, likes=likes, error=error, session_user_id=session_user_id)
             else:
-                self.render("permalink.html", post=post, session_user_id=session_user_id)
+                self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id)
 
     def post(self,post_id):
         # Get the post user ID from hidden input
@@ -257,6 +282,7 @@ class PostPage(BlogHandler):
         delete_comment = self.request.get('delete_comment')
         edit_post = self.request.get('edit_post')
         edit_comment = self.request.get('edit_comment')
+        like_comment = self.request.get('like_comment')
 
         # delete functionality
         if delete_post:
@@ -264,10 +290,10 @@ class PostPage(BlogHandler):
                 post_object = Post.by_user_id(post_user_id)
                 post_object.delete()
                 time.sleep(0.1)
-                self.redirect("/")
+                return self.redirect("/blog")
             else:
                 error = "You can only delete your own post"
-                self.get(post_id, error)
+                return self.get(post_id, error)
 
         # Add comment
         if add_comment:
@@ -277,10 +303,10 @@ class PostPage(BlogHandler):
                     c = Comment(user_id=session_user_id, post_id=post_id, comment=comment)
                     c.put()
                     time.sleep(0.1)
-                    self.redirect("/blog/%s" % post_id)
+                    return self.redirect("/blog/%s" % post_id)
             else:
                 error = 'Please enter a comment!'
-                self.get(post_id, error)
+                return self.get(post_id, error)
 
         # Delete Comment
         if delete_comment:
@@ -290,27 +316,47 @@ class PostPage(BlogHandler):
             comment_object.delete()
             time.sleep(0.1)
 
-            self.redirect("/blog/%s" % post_id)
+            return self.redirect("/blog/%s" % post_id)
         else:
             error = "You can only delete your own post"
-            self.get(post_id, error)
+            return self.get(post_id, error)
 
         # Edit Post
         if edit_post:
             if int(post_user_id) == int(session_user_id):
-                self.redirect("/blog/%s/editpost" % post_id)
-        # TODO Error Implementation
+                return self.redirect("/blog/%s/editpost" % post_id)
+            else:
+                error = "This is not your post"
+                return self.get(post_id, error)
 
         if edit_comment:
             comment_id = self.request.get('comment_id')
             key = db.Key.from_path('Comment', int(comment_id))
             comment = db.get(key)
             if int(comment.user_id) == int(session_user_id):
-                self.redirect("/blog/%s/editcomment/%s" % (post_id, comment_id))
-            # TODO Error Implementation
+                return self.redirect("/blog/%s/editcomment/%s" % (post_id, comment_id))
+            else:
+                error = "This is not your comment"
+                return self.get(post_id, error)
 
-
-
+        # Like Feature
+        if like_comment:
+            l = Like.by_post_id(post_id)
+            if int(l.post_user_id) != int(session_user_id):  # Check if the post_id belongs to the current logged in user
+                if session_user_id in l.post_user_id:  # Check if the user has already liked the post
+                    l.post_user_id.remove(session_user_id)  # Unlike the post
+                    l.like_count = l.like_count - 1  # Decrease the like count
+                    l.put()  # Update the datastore
+                    time.sleep(0.1)
+                    return self.get(post_id)
+                else:
+                    l.post_user_id.append(session_user_id)  # Add the current logged in user to
+                    l.like_count = l.like_count + 1  # Increase the like_count
+                    time.sleep(0.1)
+                    return self.get(post_id)
+            else:
+                error = "You cannot like your own post"
+                return self.get(post_id, error=error)
 
 
 class NewPost(BlogHandler):
@@ -329,9 +375,16 @@ class NewPost(BlogHandler):
         user_id = self.read_secure_cookie('user_id')
 
         if subject and content:
-            p = Post(parent=blog_key(),user_id=user_id, subject=subject, content=content)
+            p = Post(parent=blog_key(), user_id=user_id, subject=subject, content=content)
             p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+            self.like_count=0
+            self.post_id=str(p.key().id())
+            print self.post_id
+            self.post_user_id=[]
+            l = Like(like_count=self.like_count, post_id=self.post_id, post_user_id=self.post_user_id)  # Create the like entity for this post
+            l.put()
+            time.sleep(0.1)
+            return self.redirect('/blog/%s' % str(p.key().id()))
         else:
             error = "subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
@@ -366,7 +419,6 @@ class EditPost(BlogHandler):
 class EditComment(BlogHandler):
     def get(self, post_id, comment_id):
         if self.user:
-            print post_id, comment_id
             key = db.Key.from_path('Comment', int(comment_id))
             c = db.get(key)
             comment = c.comment

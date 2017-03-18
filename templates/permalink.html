@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 
+{% for like in likes %}
 {% block content %}
-{% if error %}
+{% if error and likes %}
   {{post.render(error) | safe}}
 {% else %}
-  {{post.render() | safe}}
+  {{post.render(likes) | safe}}
 {% endif %}
 
 {% for c in comments %}
