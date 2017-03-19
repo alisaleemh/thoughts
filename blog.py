@@ -160,12 +160,12 @@ class Post(db.Model):
         p = Post.all().filter('user_id =', user_id).get()
         return p
 
-    def render(self, likes, error=None):
+    def render(self, likes, likes_count, like_bool, error=None):
         self._render_text = self.content.replace('\n', '<br>')
         if error:
-            return render_str("post.html", p=self, error=error, u=User.by_id(int(self.user_id)), likes=likes)
+            return render_str("post.html", p=self, error=error, u=User.by_id(int(self.user_id)), likes=likes, likes_count=likes_count, like_bool=like_bool)
         else:
-            return render_str("post.html", p=self, u=User.by_id(int(self.user_id)), likes=likes)
+            return render_str("post.html", p=self, u=User.by_id(int(self.user_id)), likes=likes, likes_count=likes_count, like_bool=like_bool)
 
 # Duplicated render function to render front-post.html to exclude delete and comment
     def render_front(self, error=None):
@@ -205,14 +205,13 @@ class Comment(db.Model):
 
 
 class Like(db.Model):
-    like_id = db.Key()
     like_count = db.IntegerProperty(required=True)
     post_id = db.StringProperty(required=True)
     post_user_id = db.ListProperty(int, default=[])
 
     @classmethod
     def by_post_id(cls, post_id):
-        l = Like.all().filter('post_id =', post_id).fetch(1)
+        l = Like.all().filter('post_id =', str(post_id)).fetch(1)
         return l
 
 
@@ -247,29 +246,41 @@ class CommentPage(BlogHandler):
 
 class PostPage(BlogHandler):
     def get(self, post_id, error=None):
+        session_user_id = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         comments = Comment.by_post_id(post_id)
         likes = Like.by_post_id(post_id)
-        # Session user Id needs validation for displaying delete button
-        session_user_id = self.read_secure_cookie('user_id')
+
+        if likes:
+            for like in likes:
+                likes_count = like.like_count
+                if int(session_user_id) in like.post_user_id:
+                    like_bool = 'Unlike'
+                if int(session_user_id) not in like.post_user_id:
+                    like_bool = 'Like'
+        else:
+            likes_count = 0
+
+        # TODO Session user Id needs validation for displaying delete button
         if not post:
             return self.error(404)  # Should never reach here
         if comments:
             if error:
-                return self.render("permalink.html", post=post, comments=comments, error=error, likes=likes, session_user_id=session_user_id)
+                return self.render("permalink.html", post=post, comments=comments, error=error, likes=likes, session_user_id=session_user_id, likes_count=likes_count, like_bool=like_bool)
             else:
-                return self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id)
+                return self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id, likes_count=likes_count, like_bool=like_bool)
         else:
             if error:
-                return self.render("permalink.html", post=post, comments=comments, likes=likes, error=error, session_user_id=session_user_id)
+                return self.render("permalink.html", post=post, comments=comments, likes=likes, error=error, session_user_id=session_user_id, likes_count=likes_count, like_bool=like_bool)
             else:
-                return self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id)
+                return self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id, likes_count=likes_count, like_bool=like_bool)
 
     def post(self,post_id):
         # Get the post user ID from hidden input
         session_user_id = self.read_secure_cookie('user_id')
         post_user_id = self.request.get('post_user_id')
+        like_bool = 'Like'
 
         # Get the hidden inputs to decide which functionality is required
         delete_post = self.request.get('delete_post')
@@ -338,24 +349,48 @@ class PostPage(BlogHandler):
         if like_post:
             l = Like.by_post_id(post_id)
             for like in l:
-                if int(like.post_id) != int(session_user_id):  # Check if the post_id belongs to the current logged in user
-                    if int(session_user_id) in like.post_user_id:  # Check if the user has already liked the post
-                        like.post_user_id.remove(int(session_user_id))  # Unlike the post
-                        like.like_count = like.like_count - 1  # Decrease the like count
-                        like.put()  # Update the datastore
-                        time.sleep(0.1)
-                        return self.get(post_id)
-                    else:  # If the user has not liked, then increase count
-                        print "Session User_ID: %d" % int(session_user_id)
-                        like.post_user_id.insert(0, int(session_user_id))  # Add the current logged in user to
-                        print like.post_user_id
-                        like.like_count = int(like.like_count) + 1  # Increase the like_count
+                if like:
+                    if int(session_user_id) == int(post_user_id):
+                        error = "Can't like your own post"
+                        return self.get(post_id, error)
+                    if int(session_user_id) in like.post_user_id:
+                        like_bool = "Unlike"
+                        like.like_count -= 1
+                        like.post_user_id.remove(int(session_user_id))
                         like.put()
-                        time.sleep(0.1)
+                        time.sleep(0.2)
                         return self.get(post_id)
+                    else:
+                        like.like_count += 1
+                        like.post_user_id.append(int(session_user_id))
+                        like.put()
+                        time.sleep(0.2)
+                        return self.get(post_id)
+
                 else:
-                    error = "You cannot like your own post"
-                    return self.get(post_id, error=error)
+                    error = "Erorror"
+                    return self.get(post_id, error)
+
+
+            #for like in l:
+            #    if int(like.post_id) != int(session_user_id):  # Check if the post_id belongs to the current logged in user
+            #        if int(session_user_id) in like.post_user_id:  # Check if the user has already liked the post
+            #            like.post_user_id.remove(int(session_user_id))  # Unlike the post
+            #            like.like_count = like.like_count - 1  # Decrease the like count
+            #            like.put()  # Update the datastore
+            #            time.sleep(0.1)
+            #            return self.get(post_id)
+            #        else:  # If the user has not liked, then increase count
+            #            print "Session User_ID: %d" % int(session_user_id)
+            #            like.post_user_id.insert(0, int(session_user_id))  # Add the current logged in user to
+            #            print like.post_user_id
+            #            like.like_count = int(like.like_count) + 1  # Increase the like_count
+            #            like.put()
+            #            time.sleep(0.1)
+            #            return self.get(post_id)
+            #    else:
+            #        error = "You cannot like your own post"
+            #        return self.get(post_id, error=error)
 
 
 class NewPost(BlogHandler):
@@ -376,9 +411,9 @@ class NewPost(BlogHandler):
         if subject and content:
             p = Post(parent=blog_key(), user_id=user_id, subject=subject, content=content)
             p.put()
-            self.like_count = 0
-            self.post_id = str(p.key().id())
-            l = Like(like_count=self.like_count, post_id=self.post_id)  # Create the like entity for this post
+            like_count = 0
+            post_id = str(p.key().id())
+            l = Like(like_count=like_count, post_id=post_id)  # Create the like entity for this post
             l.put()
             time.sleep(0.1)
             return self.redirect('/blog/%s' % str(p.key().id()))

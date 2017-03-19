@@ -2,31 +2,19 @@
   <div class="post-heading" >
     <div class="post-title">
 
-      {% for like in likes %}
       <div class="like_button">
         <form method="post">
           <input name="like_post" type="hidden" value="1" />
           <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-          {% if p.user_id in likes.post_user_id %}
-          <input type="submit" value="Unlike" />
-          {% endif %}
-          {% if p.user_id not in likes.post_user_id %}
-          <input type="submit" value="Like" />
-          {% endif %}
+          <input type="submit" value="{{like_bool}}" />
         </form>
-      </div>
-      {% endfor %}
-      <div>
-        {% for like in likes %}
-        {{like.post_user_id}}
-        {% endfor %}
       </div>
 
       <div class="likes">
-        {% for like in likes %}
-        <div> {{like.like_count}}
+
+        <div> {{likes_count}}
         </div>
-        {% endfor %}
+
         <div>
           {{p.subject}},{{u.name}}
         </div>

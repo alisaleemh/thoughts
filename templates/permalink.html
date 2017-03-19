@@ -2,9 +2,9 @@
 
 {% block content %}
 {% if error %}
-  {{post.render(likes, error) | safe}}
+  {{post.render(likes, likes_count, like_bool, error) | safe}}
 {% else %}
-  {{post.render(likes) | safe}}
+  {{post.render(likes, likes_count, like_bool) | safe}}
 {% endif %}
 
 {% for c in comments %}
