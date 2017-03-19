@@ -3,15 +3,9 @@ Implement Like functionality:
 
 Like Model
 
-class Like(db.Model)
-  postid = Integer
-  likecount = Integer, default=0
-  user id = ListProperty( [1,2,3,34]
-  for u in user_id
-    if u = self.user.key.id
-      return
-likeobj = Like(postid=postid, likecount=1)
-likeobj.append(self.user.key.userid)
+
+- Create a db.model for like object
+- Create a
 
 ==================================
 Ability to Edit Posts and Comment
@@ -21,4 +15,13 @@ Ability to Edit Posts and Comment
 - Modify post method to redirect to editpost handler which error handling logic if not post owner
 - Add button in post.html to redirect to edit post handler
 - Create edit_post.html
-- Modify get and post methods
+- Modify get and post methods in EditPost
+---------------------------------------------------------------------
+- Add handler to app with regex matching 'blog/([0-9]+/editpost)'
+- Add EditComment handler which takes in the comment id, should be identical to editpost
+- Modify post method to redirect to editpost handler which error handling logic if not post owner
+- Add button in post.html to redirect to edit post handler
+- Create editcomment.html
+- Modify get and post methods in EditComment
+
+L

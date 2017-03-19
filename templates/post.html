@@ -1,45 +1,62 @@
 <div class="post">
   <div class="post-heading" >
     <div class="post-title">
-      <div>
-        {{p.subject}},{{u.name}}
+
+      <div class="like_button">
+        <form method="post">
+          <input name="like_post" type="hidden" value="1" />
+          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+          <input type="submit" value="{{like_bool}}" />
+        </form>
+      </div>
+
+      <div class="likes">
+
+        <div> {{likes_count}}
+        </div>
+
+        <div>
+          {{p.subject}},{{u.name}}
         </div>
       </div>
-
-      <div class="post-date">
-        {{p.created.strftime("%b %d, %Y")}}
-      </div>
     </div>
 
-    <div class="post-content">
-      {{p._render_text | safe}}
-    </div>
-    <div>
-      <form  method="post">
-        <input name="delete_post" type="hidden" value="1" />
-        <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-        <input type="submit" value="Delete Post" />
-      </form>
-
-      <div class="error">{{error}}</div>
-
-      <form method="post">
-        <div> Comment: </div>
-        <label>
-          <textarea name="comment"></textarea>
-        </label>
-        <input name="add_comment" type="hidden" value="1" />
-        <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-        <input type="submit" value="Add Comment">
-      </form>
-
-      <div>
-        <form  method="post">
-          <input name="edit_post" type="hidden" value="1" />
-          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-          <input type="submit" value="Edit Post" />
-        </form>
-
-
+    <div class="post-date">
+      {{p.created.strftime("%b %d, %Y")}}
     </div>
   </div>
+
+  <div class="post-content">
+    {{p._render_text | safe}}
+  </div>
+  <div class="delete_post">
+    <form  method="post">
+      <input name="delete_post" type="hidden" value="1" />
+      <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+      <input type="submit" value="Delete Post" />
+    </form>
+  </div>
+  <div class="error">{{error}}
+  </div>
+  <div class="comment_textbox">
+    <form method="post">
+      <div> Comment:
+      </div>
+      <label>
+        <textarea name="comment"></textarea>
+      </label>
+      <input name="add_comment" type="hidden" value="1" />
+      <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+      <input type="submit" value="Add Comment">
+    </form>
+  </div>
+
+  <div>
+    <form  method="post">
+      <input name="edit_post" type="hidden" value="1" />
+      <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+      <input type="submit" value="Edit Post" />
+    </form>
+  </div>
+
+</div>
