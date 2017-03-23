@@ -304,12 +304,14 @@ class PostPage(BlogHandler):
         # Add comment
         if add_comment:
             comment = self.request.get('comment')
-            if comment:
-                if int(post_user_id) == int(session_user_id):
-                    c = Comment(user_id=session_user_id, post_id=post_id, comment=comment)
-                    c.put()
-                    time.sleep(0.1)
-                    return self.redirect("/blog/%s" % post_id)
+            print comment
+            if comment and session_user_id:
+                c = Comment(user_id=session_user_id, post_id=post_id, comment=comment)
+                print c
+                print "TATTA"
+                c.put()
+                time.sleep(0.1)
+                return self.get(post_id)
             else:
                 error = 'Please enter a comment!'
                 return self.get(post_id, error)
@@ -322,7 +324,7 @@ class PostPage(BlogHandler):
             if int(session_user_id) == int(comment_object.user_id):
                 comment_object.delete()
                 time.sleep(0.1)
-                return self.redirect("/blog/%s" % post_id)
+                return self.get(post_id)
             else:
                 error = "You can only delete your own comment"
                 return self.get(post_id, error)
