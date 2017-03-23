@@ -2,9 +2,33 @@
 
 {% block content %}
 
-  {% for p in posts %}
-    {{ p.render_front() | safe }}
-    <br><br>
-  {% endfor %}
+<header class="intro-header" style="background-image: url('static/img/home.jpg')">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="site-heading">
+          <h1>Thoughts</h1>
+          <hr class="small">
+          <span class="text-right">A place to share your mind</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+{% for p in posts %}
+{{ p.render_front() | safe }}
+<br><br>
+{% endfor %}
+<div class="bottom-buffer">
+  <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+    <ul class="pager">
+      <li class="next">
+        <a href="#">Older Posts &rarr;</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
 
 {% endblock %}
