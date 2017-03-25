@@ -246,6 +246,9 @@ class CommentPage(BlogHandler):
 
 class PostPage(BlogHandler):
     def get(self, post_id, error=None):
+        if not self.user:
+            return self.redirect('/blog')
+        
         session_user_id = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
@@ -398,13 +401,13 @@ class PostPage(BlogHandler):
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
-            self.render("newpost.html")
+            return self.render("newpost.html")
         else:
-            self.redirect("/login")
+            return self.redirect("/login")
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            return self.redirect('/blog')
 
         subject = self.request.get('subject')
         content = self.request.get('content')

@@ -41,7 +41,7 @@
         <div class="row control-group">
           <div class="form-group col-xs-12 floating-label-form-group controls">
             <label>Verify Password</label>
-            <input type="password" class="form-control" name="verify" placeholder="Password" id="password" value="" required data-validation-required-message="Please enter your password.">
+            <input type="password" class="form-control" name="verify" placeholder="Verify Password" id="password" value="" required data-validation-required-message="Please enter your password.">
             <p class="help-block text-danger"></p>
           </div>
         </div>
@@ -54,23 +54,25 @@
           </div>
         </div>
 
-          {% if error_username or error_email or error_verify or error_password %}
-            <br>
-            <div class="alert alert-danger">
-              <strong><div class="text-center">{{error_username}} {{error_email}} {{error_verify}} {{error_password}}</div></strong>
-            </div>
-            {% endif %}
+        {% if error_username or error_email or error_verify or error_password %}
+        <br>
+        <div class="alert alert-danger">
+          <strong><div class="text-center">{{error_username}} {{error_email}} {{error_verify}} {{error_password}}</div></strong>
+        </div>
+        {% endif %}
 
         <br>
         <div id="success"></div>
         <div class="row">
           <div class="form-group col-xs-12">
-            <input type="submit" value="Sign in" class="btn btn-default align-right"></input >
+            <div class="center-block">
+            <input type="submit" value="Sign in" class="btn btn-default"></input >
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
+</div>
 </div>
 
 <hr>

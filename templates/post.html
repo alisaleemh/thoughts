@@ -1,62 +1,139 @@
-<div class="post">
-  <div class="post-heading" >
-    <div class="post-title">
 
+<header class="intro-header" style="background-image: url('/static/img/post-bg.jpg')">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>{{p.subject}}</h1>
+          <span class="meta">Posted by {{u.name}}  on {{p.created.strftime("%b %d, %Y")}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+
+
+
+<!-- Post Content -->
+<div class="container">
+  <div class="row">
+    <div class="col-lg-2 col-md-4 col-sm-5">
       <div class="like_button">
         <form method="post">
           <input name="like_post" type="hidden" value="1" />
           <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-          <input type="submit" value="{{like_bool}}" />
+          <button class="btn btn-xs btn-block">{{likes_count}} Likes</button>
+          <input type="submit" value="{{like_bool}}" class="btn glyphicon btn-xs glyphicon-thumbs-up btn-block"></input>
+        </form>
+      </div>
+    </div>
+
+    <div>
+      <article>
+        <div class="col-lg-8 col-md-6 col-sm-5">
+          <p> {{p.content}} </p>
+
+
+          {% if error %}
+          <br>
+          <hr>
+          <div class="alert alert-danger">
+            <strong><div class="text-center">{{error}}</div></strong>
+          </div>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+
+    <div class="col-lg-2 col-md-4 col-sm-5">
+      <div class="edit_post">
+        <form method="post">
+          <input name="edit_post" type="hidden" value="1" />
+          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+          <input type="submit" value="Edit Post" class="btn glyphicon btn-xs btn-block"></input>
         </form>
       </div>
 
-      <div class="likes">
-
-        <div> {{likes_count}}
-        </div>
-
-        <div>
-          {{p.subject}},{{u.name}}
-        </div>
+      <div class="delete_btton">
+        <form method="post">
+          <input name="delete_post" type="hidden" value="1" />
+          <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+          <input type="submit" value="Delete Post" class="btn glyphicon btn-xs btn-danger btn-block"></input>
+        </form>
       </div>
+
     </div>
 
-    <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}}
-    </div>
   </div>
-
-  <div class="post-content">
-    {{p._render_text | safe}}
-  </div>
-  <div class="delete_post">
-    <form  method="post">
-      <input name="delete_post" type="hidden" value="1" />
-      <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-      <input type="submit" value="Delete Post" />
-    </form>
-  </div>
-  <div class="error">{{error}}
-  </div>
-  <div class="comment_textbox">
-    <form method="post">
-      <div> Comment:
-      </div>
-      <label>
-        <textarea name="comment"></textarea>
-      </label>
+  <hr>
+  <div class="row control-group">
+    <div class="form-group col-xs-12 floating-label-form-group controls">
+      <form method="post">
       <input name="add_comment" type="hidden" value="1" />
       <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-      <input type="submit" value="Add Comment">
-    </form>
+      <label>Enter a Comment</label>
+      <textarea name="comment" rows="10" placeholder="Enter your comment" wrap="soft">{{content}}</textarea>
+      <input type="submit" class="btn glyphicon btn-xs btn-block" value="Add Comment">
+    </div>
   </div>
-
-  <div>
-    <form  method="post">
-      <input name="edit_post" type="hidden" value="1" />
-      <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-      <input type="submit" value="Edit Post" />
-    </form>
-  </div>
-
 </div>
+
+
+
+<!-- <div class="post">
+<div class="post-heading" >
+<div class="post-title">
+
+
+<div class="likes">
+
+<div> {{likes_count}}
+</div>
+
+<div>
+{{p.subject}},{{u.name}}
+</div>
+</div>
+</div>
+
+<div class="post-date">
+{{p.created.strftime("%b %d, %Y")}}
+</div>
+</div>
+
+<div class="post-content">
+{{p._render_text | safe}}
+</div>
+<div class="delete_post">
+<form  method="post">
+<input name="delete_post" type="hidden" value="1" />
+<input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+<input type="submit" value="Delete Post" />
+</form>
+</div>
+<div class="error">{{error}}
+</div>
+<div class="comment_textbox">
+<form method="post">
+<div> Comment:
+</div>
+<label>
+<textarea name="comment"></textarea>
+</label>
+<input name="add_comment" type="hidden" value="1" />
+<input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+<input type="submit" value="Add Comment">
+</form>
+</div>
+
+<div>
+<form  method="post">
+<input name="edit_post" type="hidden" value="1" />
+<input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+<input type="submit" value="Edit Post" />
+</form>
+</div>
+
+</div> -->
