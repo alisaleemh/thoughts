@@ -1,21 +1,75 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>New Post</h2>
 
-    <form method="post">
-      <label>
-        <div>subject</div>
-        <input type="text" name="subject" value="{{subject}}">
-      </label>
+<header class="intro-header" style="background-image: url('/static/img/home.jpg')">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="site-heading">
+          <h1>Thoughts</h1>
+          <hr class="small">
+          <span class="text-right">A place to share your mind</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 
-      <label>
-        <div>blog</div>
-        <textarea name="content">{{content}}</textarea>
-      </label>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <form method="post" name="newpost" id="newpost" novalidate>
 
-      <div class="error">{{error}}</div>
+        <div class="row control-group">
+          <div class="form-group col-xs-12 floating-label-form-group controls">
+            <label>Post Title</label>
+            <input type="text" class="form-control" placeholder="Enter your post's title" name="subject"  value="{{subject}}">
+            <p class="help-block text-danger"></p>
+          </div>
+        </div>
+        <div class="row control-group">
+          <div class="form-group col-xs-12 floating-label-form-group controls">
+            <label>Post Content</label>
+            <textarea name="content" rows="10" placeholder="Enter your post content " wrap="soft">{{content}}</textarea>
+          </div>
+        </div>
 
-      <input type="submit">
-    </form>
+
+        {% if error %}
+        <br>
+        <div class="alert alert-danger">
+          <strong><div class="text-center">{{error}}!</div></strong>
+        </div>
+        {% endif %}
+
+        <br>
+        <div id="success"></div>
+        <div class="row">
+          <div class="form-group col-xs-12">
+            <input type="submit" value="Create Post" class="btn btn-default align-right"></input >
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- <form method="post">
+<label>
+<div>subject</div>
+<input type="text" name="subject" value="{{subject}}">
+</label>
+
+<label>
+<div>blog</div>
+<textarea name="content">{{content}}</textarea>
+</label>
+
+<div class="error">{{error}}</div>
+
+<input type="submit">
+</form> -->
 {% endblock %}

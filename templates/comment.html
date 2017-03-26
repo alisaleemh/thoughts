@@ -1,4 +1,50 @@
-<div class="comment">
+<div class="container">
+  <div class="row">
+    <div class="col-lg-2 col-md-4 col-sm-5">
+      <button class="btn btn-xs btn-block">By {{u.name}}</button>
+      </div>
+
+    <div>
+      <article>
+        <div class="col-lg-8 col-md-6 col-sm-5">
+           <div class="comment">
+              {{c._render_text | safe}}
+            </div>
+          {% if error or error_comment%}
+          <br>
+          <div class="alert alert-danger">
+            <strong><div class="text-center">{{error_comment}}{{error}}</div></strong>
+          </div>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+
+    <div class="col-lg-2 col-md-4 col-sm-5">
+      <div class="edit_comment">
+        <form method="post">
+          <input name="edit_comment" type="hidden" value="1" />
+          <input name="comment_id" type="hidden" value="{{c.key().id()}}" />
+          <input type="submit" value="Edit Comment" class="btn glyphicon btn-xs btn-block"></input>
+        </form>
+      </div>
+
+      <div class="delete_comment">
+        <form method="post">
+          <input name="delete_comment" type="hidden" value="1" />
+          <input name="comment_id" type="hidden" value="{{c.key().id()}}"/>
+          <input style="white-space: normal;" type="submit" value="Delete Comment" class="btn glyphicon btn-xs btn-danger btn-block"></input>
+        </form>
+      </div>
+    </div>
+    <hr>
+  </div>
+</div>
+
+
+
+
+<!-- <div class="comment">
   <div>
     {{c._render_text | safe}}
     PostID: {{c.post_id}} UserID: {{c.user_id}}
@@ -20,4 +66,4 @@
     <input type="submit" value="Edit Comment" />
   </form>
 </div>
-</div>
+</div> -->
