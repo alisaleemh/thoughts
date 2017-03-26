@@ -1,28 +1,14 @@
+def sleep_decorator(function):
 
 
-List = [5006,6004]
-
-print List
-
-x = 5006
-
-if x in List:
-    print "Tatta found"
-else:
-    print "Tatta not found"
+    def wrapper(num):
+        print num
+        return function(num)
+    return wrapper
 
 
-x = 50021
-List.append(x)
+@sleep_decorator
+def print_number(num):
+    return num
 
-y = 5002444
-List.append(y)
-print List
-
-
-def Tatta(tatti=6):
-    print tatti
-
-
-Tatta(5)
-Tatta()
+print(print_number(222))

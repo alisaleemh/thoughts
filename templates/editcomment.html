@@ -20,7 +20,7 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-      <form method="post" name="newpost" id="newpost" novalidate>
+      <form method="post" novalidate>
 
 
         <div class="row control-group">
@@ -39,10 +39,17 @@
         {% endif %}
 
         <br>
+      </div>
+    </div>
         <div class="row">
-          <div class="form-group col-xs-12">
+          <div class="form-group col-xs-2">
             <input value="Edit Comment" type="submit" class="btn btn-default align-right"></input >
           </div>
+      </form>
+      <form method="post" novalidate>
+        <div class="form-group col-xs-2">
+          <input name="cancel_comment" type="hidden" value="1" />
+          <input value="Cancel" type="submit" class="btn btn-warning align-right"></input>
         </div>
       </form>
     </div>
@@ -52,17 +59,5 @@
 <hr>
 
 
-  <!-- <h2>Edit Comment</h2>
 
-    <form method="post">
-
-      <label>
-        <div>comment</div>
-        <textarea name="comment">{{comment}}</textarea>
-      </label>
-
-      <div class="error">{{error}}</div>
-
-      <input type="submit">
-    </form> -->
 {% endblock %}

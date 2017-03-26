@@ -8,75 +8,22 @@ import time
 
 import webapp2
 import jinja2
-
 from google.appengine.ext import db
+
+
+# Models
+from models.user import User
+from models.post import Post
+from models.like import Like
+from models.comment import Comment
+
+from helpers import *
+from decorators import *
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                autoescape=True)
 
-secret = 'fart'
-
-
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
-
-def make_secure_val(val):
-    return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
-
-def check_secure_val(secure_val):
-    val = secure_val.split('|')[0]
-    if secure_val == make_secure_val(val):
-        return val
-
-def render_post(response, post):
-    response.out.write('<b>' + post.subject + '</b><br>')
-    response.out.write(post.content)
-
-# # # # #  user stuff
-def make_salt(length=5):
-    return ''.join(random.choice(letters) for x in xrange(length))
-
-def make_pw_hash(name, pw, salt=None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
-
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
-
-
-def users_key(group='default'):
-    return db.Key.from_path('users', group)
-
-
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-
-
-def valid_username(username):
-    return username and USER_RE.match(username)
-
-
-PASS_RE = re.compile(r"^.{3,20}$")
-
-
-def valid_password(password):
-    return password and PASS_RE.match(password)
-
-
-EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
-
-
-def valid_email(email):
-    return not email or EMAIL_RE.match(email)
-
-# # # # #  blog stuff
-
-def blog_key(name='default'):
-    return db.Key.from_path('blogs', name)
 
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -111,110 +58,6 @@ class BlogHandler(webapp2.RequestHandler):
         self.user = uid and User.by_id(int(uid))
 
 
-class User(db.Model):
-    user_id = db.Key()
-    name = db.StringProperty(required=True)
-    pw_hash = db.StringProperty(required=True)
-    email = db.StringProperty()
-
-    @classmethod
-    def by_id(cls, uid):
-        return User.get_by_id(uid, parent=users_key())
-
-    @classmethod
-    def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
-        return u
-
-    @classmethod
-    def by_post_id(cls, post_id):
-        u = User.all().filter('name =', post_id).get()
-        return u
-
-    @classmethod
-    def register(cls, name, pw, email=None):
-        pw_hash = make_pw_hash(name, pw)
-        return User(parent=users_key(),
-                    user_id=db.Key(),
-                    name=name,
-                    pw_hash=pw_hash,
-                    email=email)
-
-    @classmethod
-    def login(cls, name, pw):
-        u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash):
-            return u
-
-
-class Post(db.Model):
-    post_id = db.Key()
-    user_id = db.StringProperty(required=True)
-    subject = db.StringProperty(required=True)
-    content = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-    last_modified = db.DateTimeProperty(auto_now=True)
-
-    @classmethod
-    def by_user_id(cls, user_id):
-        p = Post.all().filter('user_id =', user_id).get()
-        return p
-
-    def render(self, likes, likes_count, like_bool, error=None):
-        self._render_text = self.content.replace('\n', '<br>')
-        if error:
-            return render_str("post.html", p=self, error=error, u=User.by_id(int(self.user_id)), likes=likes, likes_count=likes_count, like_bool=like_bool)
-        else:
-            return render_str("post.html", p=self, u=User.by_id(int(self.user_id)), likes=likes, likes_count=likes_count, like_bool=like_bool)
-
-# Duplicated render function to render front-post.html to exclude delete and comment
-    def render_front(self, error=None):
-        self._render_text = self.content.replace('\n', '<br>')
-        if error:
-            return render_str("front-post.html", p=self, error=error, u=User.by_id(int(self.user_id)))
-        else:
-            return render_str("front-post.html", p=self, u=User.by_id(int(self.user_id)))
-
-
-class Comment(db.Model):
-    comment_id = db.Key()
-    user_id = db.StringProperty(required=True)
-    post_id = db.StringProperty(required=True)
-    comment = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-    last_modified = db.DateTimeProperty(auto_now=True)
-
-    @classmethod
-    def by_user_id(cls, user_id):
-        c = Comment.all().filter('user_id =', user_id).get()
-        return c
-
-    @classmethod
-    def by_post_id(cls, post_id):
-        c = Comment.all().filter('post_id =', post_id).fetch(99999999)
-        return c
-
-    @classmethod
-    def by_id(cls, comment_id):
-        c = Comment.all().filter('comment_id =', comment_id).get()
-        return c
-
-    def render(self, session_user_id):
-        self._render_text = self.comment.replace('\n', '<br>')
-        return render_str("comment.html", c=self, u=User.by_id(int(self.user_id)), session_user_id=session_user_id)
-
-
-class Like(db.Model):
-    like_count = db.IntegerProperty(required=True)
-    post_id = db.StringProperty(required=True)
-    post_user_id = db.ListProperty(int, default=[])
-
-    @classmethod
-    def by_post_id(cls, post_id):
-        l = Like.all().filter('post_id =', str(post_id)).fetch(1)
-        return l
-
-
 class MainPage(BlogHandler):
     def get(self):
         self.redirect('/blog')
@@ -223,28 +66,24 @@ class MainPage(BlogHandler):
 class BlogFront(BlogHandler):
     def get(self, error=None):
         posts = Post.all().order('-created')
+        print posts
         self.render('front.html', posts=posts, error=error)
 
-    def post(self):
-        # Get the post user ID
-        post_user_id = self.request.get('post_user_id')
-        session_user_id = self.read_secure_cookie('user_id')
-        if post_user_id:
-            if session_user_id != '':
-                if int(post_user_id) == int(session_user_id):
-                    post_object = Post.by_user_id(post_user_id)
-                    post_object.delete()
-                    time.sleep(0.1)
-                    self.redirect("/blog")
-
-
-class CommentPage(BlogHandler):
-    def get(self):
-        comments = Comment.all()
-        self.render("comment-test.html", comments=comments)
-
+    # def post(self):
+    #     # Get the post user ID
+    #     post_user_id = self.request.get('post_user_id')
+    #     session_user_id = self.read_secure_cookie('user_id')
+    #     if post_user_id:
+    #         if session_user_id != '':
+    #             if int(post_user_id) == int(session_user_id):
+    #                 post_object = Post.by_user_id(post_user_id)
+    #                 post_object.delete()
+    #                 time.sleep(0.1)
+    #                 self.redirect("/blog")
 
 class PostPage(BlogHandler):
+
+    @post_exists
     def get(self, post_id, error=None):
         if not self.user:
             return self.redirect('/blog')
@@ -266,8 +105,6 @@ class PostPage(BlogHandler):
             likes_count = 0
 
         # TODO Session user Id needs validation for displaying delete button
-        if not post:
-            return self.error(404)  # Should never reach here
         if comments:
             if error:
                 return self.render("permalink.html", post=post, comments=comments, error=error, likes=likes, session_user_id=session_user_id, likes_count=likes_count, like_bool=like_bool)
@@ -279,6 +116,8 @@ class PostPage(BlogHandler):
             else:
                 return self.render("permalink.html", post=post, comments=comments, likes=likes, session_user_id=session_user_id, likes_count=likes_count, like_bool=like_bool)
 
+    @user_logged_in
+    @post_exists
     def post(self,post_id):
         # Get the post user ID from hidden input
         session_user_id = self.read_secure_cookie('user_id')
@@ -375,27 +214,6 @@ class PostPage(BlogHandler):
                     return self.get(post_id, error)
 
 
-            #for like in l:
-            #    if int(like.post_id) != int(session_user_id):  # Check if the post_id belongs to the current logged in user
-            #        if int(session_user_id) in like.post_user_id:  # Check if the user has already liked the post
-            #            like.post_user_id.remove(int(session_user_id))  # Unlike the post
-            #            like.like_count = like.like_count - 1  # Decrease the like count
-            #            like.put()  # Update the datastore
-            #            time.sleep(0.1)
-            #            return self.get(post_id)
-            #        else:  # If the user has not liked, then increase count
-            #            print "Session User_ID: %d" % int(session_user_id)
-            #            like.post_user_id.insert(0, int(session_user_id))  # Add the current logged in user to
-            #            print like.post_user_id
-            #            like.like_count = int(like.like_count) + 1  # Increase the like_count
-            #            like.put()
-            #            time.sleep(0.1)
-            #            return self.get(post_id)
-            #    else:
-            #        error = "You cannot like your own post"
-            #        return self.get(post_id, error=error)
-
-
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
@@ -464,17 +282,19 @@ class EditComment(BlogHandler):
     def post(self, post_id, comment_id):
         comment = self.request.get('comment')
         user_id = self.read_secure_cookie('user_id')
-
-        if comment:
+        cancel_comment = self.request.get('cancel_comment')
+        if cancel_comment:
+            return self.redirect('/blog/%s' % post_id)
+        elif comment:
             key = db.Key.from_path('Comment', int(comment_id))
             c = db.get(key)
             c = Comment(key=key, user_id=user_id, post_id=post_id, comment=comment)
             c.put()
-            time.sleep(0.1)
-            self.redirect('/blog/%s' % post_id)
+            time.sleep(0.2)
+            return self.redirect('/blog/%s' % post_id)
         else:
             error = "Please enter a comment!"
-            self.render("editpost.html", comment=comment, error=error)
+            return self.render("editpost.html", comment=comment, error=error)
 
 
 class Signup(BlogHandler):
@@ -569,7 +389,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
-                               ('/welcome', Welcome),
-                               ('/comment', CommentPage)
+                               ('/welcome', Welcome)
                                ],
                               debug=True)
