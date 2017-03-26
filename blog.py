@@ -201,7 +201,7 @@ class Comment(db.Model):
 
     def render(self, session_user_id):
         self._render_text = self.comment.replace('\n', '<br>')
-        return render_str("comment.html", c=self, session_user_id=session_user_id)
+        return render_str("comment.html", c=self, u=User.by_id(int(self.user_id)), session_user_id=session_user_id)
 
 
 class Like(db.Model):
@@ -248,7 +248,7 @@ class PostPage(BlogHandler):
     def get(self, post_id, error=None):
         if not self.user:
             return self.redirect('/blog')
-        
+
         session_user_id = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
@@ -310,8 +310,6 @@ class PostPage(BlogHandler):
             print comment
             if comment and session_user_id:
                 c = Comment(user_id=session_user_id, post_id=post_id, comment=comment)
-                print c
-                print "TATTA"
                 c.put()
                 time.sleep(0.1)
                 return self.get(post_id)
@@ -326,7 +324,7 @@ class PostPage(BlogHandler):
             comment_object = db.get(key)
             if int(session_user_id) == int(comment_object.user_id):
                 comment_object.delete()
-                time.sleep(0.1)
+                time.sleep(0.2)
                 return self.get(post_id)
             else:
                 error = "You can only delete your own comment"
@@ -373,7 +371,7 @@ class PostPage(BlogHandler):
                         return self.get(post_id)
 
                 else:
-                    error = "Erorror"
+                    error = "Error"
                     return self.get(post_id, error)
 
 

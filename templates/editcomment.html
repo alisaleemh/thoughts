@@ -1,7 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Edit Comment</h2>
+
+
+<header class="intro-header" style="background-image: url('/static/img/home.jpg')">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="site-heading">
+          <h1>Edit Your Comment</h1>
+          <hr class="small">
+          <span class="text-right">Thoughts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <form method="post" name="newpost" id="newpost" novalidate>
+
+
+        <div class="row control-group">
+          <div class="form-group col-xs-12 floating-label-form-group controls">
+            <label>Comment Content</label>
+            <textarea name="comment" rows="10" placeholder="Enter your comment content " wrap="soft"></textarea>
+          </div>
+        </div>
+
+
+        {% if error %}
+        <br>
+        <div class="alert alert-danger">
+          <strong><div class="text-center">{{error}}</div></strong>
+        </div>
+        {% endif %}
+
+        <br>
+        <div class="row">
+          <div class="form-group col-xs-12">
+            <input value="Edit Comment" type="submit" class="btn btn-default align-right"></input >
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+
+  <!-- <h2>Edit Comment</h2>
 
     <form method="post">
 
@@ -13,5 +64,5 @@
       <div class="error">{{error}}</div>
 
       <input type="submit">
-    </form>
+    </form> -->
 {% endblock %}
