@@ -64,16 +64,6 @@ class PostPage(BlogHandler):
         edit_comment = self.request.get('edit_comment')
         like_post = self.request.get('like_post')
 
-        # # delete functionality
-        # if delete_post:
-        #     if int(post_user_id) == int(session_user_id):
-        #         post_object = Post.by_user_id(post_user_id)
-        #         post_object.delete()
-        #         time.sleep(0.1)
-        #         return self.redirect("/blog")
-        #     else:
-        #         error = "You can only delete your own post"
-        #         return self.get(post_id, error)
 
         # Add comment
         if add_comment:
@@ -88,18 +78,6 @@ class PostPage(BlogHandler):
                 error = 'Please enter a comment!'
                 return self.get(post_id, error)
 
-        # Delete Comment
-        if delete_comment:
-            comment_id = self.request.get('comment_id')
-            key = db.Key.from_path('Comment', int(comment_id))
-            comment_object = db.get(key)
-            if int(session_user_id) == int(comment_object.user_id):
-                comment_object.delete()
-                time.sleep(0.2)
-                return self.get(post_id)
-            else:
-                error = "You can only delete your own comment"
-                return self.get(post_id, error)
 
         # Edit Post
         if edit_post:
