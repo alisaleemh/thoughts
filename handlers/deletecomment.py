@@ -18,12 +18,15 @@ class DeleteComment(PostPage):
     def get(self, post_id, comment_id):
         if not self.user:
             return self.redirect('/blog')
+
+        session_user_id = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Comment', int(comment_id))
         comment = db.get(key)
         if int(session_user_id) == int(comment.user_id):
             comment.delete()
             time.sleep(0.2)
-            return PostPage.get(self, post_id)
+            return self.redirect("/blog/%s" % post_id)
         else:
             error = "You can only delete your own comment"
+            self.redirect("/blog/%s" % post_id)
             return PostPage.get(self, post_id, error)

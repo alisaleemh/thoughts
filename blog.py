@@ -24,6 +24,7 @@ from handlers.deletecomment import DeleteComment
 from handlers.deletepost import DeletePost
 from handlers.editcomment import EditComment
 from handlers.editpost import EditPost
+from handlers.like import LikePost
 from handlers.login import Login
 from handlers.logout import Logout
 from handlers.mainpage import MainPage
@@ -39,6 +40,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/?', BlogFront),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
+                               ('/blog/([0-9]+)/like', LikePost ),
                                ('/blog/([0-9]+)/editpost', EditPost),
                                ('/blog/([0-9]+)/delete', DeletePost),
                                ('/blog/([0-9]+)/editcomment/([0-9]+)', EditComment),

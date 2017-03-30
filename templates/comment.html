@@ -33,37 +33,10 @@
         <form method="post">
           <input name="delete_comment" type="hidden" value="1" />
           <input name="comment_id" type="hidden" value="{{c.key().id()}}"/>
-          <input style="white-space: normal;" type="submit" value="Delete Comment" class="btn glyphicon btn-xs btn-danger btn-block"></input>
+            <a href="/blog/{{c.post_id}}/delete/{{c.key().id()}}" style="white-space: normal" class="btn glyphicon btn-xs btn-danger btn-block">Delete Comment</a>
         </form>
       </div>
     </div>
     <hr>
   </div>
 </div>
-
-
-
-
-<!-- <div class="comment">
-  <div>
-    {{c._render_text | safe}}
-    PostID: {{c.post_id}} UserID: {{c.user_id}}
-  </div>
-
-
-<div class="comment_delete">
-  <form method="post">
-    <input name="delete_comment" type="hidden" value="1" />
-    <input name="comment_id" type="hidden" value="{{c.key().id()}}"/>
-    <input type="submit" value="Delete Comment" />
-  </form>
-</div>
-
-<div class="comment_edit">
-  <form  method="post">
-    <input name="edit_comment" type="hidden" value="1" />
-    <input name="comment_id" type="hidden" value="{{c.key().id()}}" />
-    <input type="submit" value="Edit Comment" />
-  </form>
-</div>
-</div> -->
