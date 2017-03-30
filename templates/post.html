@@ -59,7 +59,7 @@
         <form method="post">
           <input name="delete_post" type="hidden" value="1" />
           <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-          <input type="submit" value="Delete Post" class="btn glyphicon btn-xs btn-danger btn-block"></input>
+          <a href="/blog/{{p.key().id()}}/delete" style="white-space: normal" class="btn glyphicon btn-xs btn-danger btn-block">Delete Post</a>
         </form>
       </div>
 
@@ -71,86 +71,31 @@
     <div class="row control-group">
 
       <div class="col-lg-2 col-md-4 col-sm-5">
-        <div class="add_comment"
-        <form method="post">
-        <input type="submit" class="btn glyphicon btn-xs btn-block" value="Add Comment"> </input>
-      </div>
-      </div>
-      <div class="col-lg-8 col-md-6 col-sm-5">
-        <div class="form-group floating-label-form-group controls">
+        <div class="add_comment">
+          <form method="post">
             <input name="add_comment" type="hidden" value="1" />
             <input name="post_user_id" type="hidden" value="{{p.user_id}}" />
+            <input type="submit" class="btn glyphicon btn-xs btn-block" value="Add Comment"> </input>
+          </div>
+        </div>
+        <div class="col-lg-8 col-md-6 col-sm-5">
+          <div class="form-group floating-label-form-group controls">
+
             <textarea name="comment" rows="2" placeholder="Enter your comment" wrap="soft" style="border:solid 1px grey;"></textarea>
           </form>
-          </div>
         </div>
       </div>
     </div>
-<div class="row">
-  <hr>
-  <div class="post-heading">
-    <h2>Comments</h2>
-<br>
   </div>
-  </div>
-
-</div>
-
-
-
-
-    <!-- <div class="post">
-    <div class="post-heading" >
-    <div class="post-title">
-
-
-    <div class="likes">
-
-    <div> {{likes_count}}
+  <div class="row">
+    <hr>
+    <div class="post-heading">
+      <h2>Comments</h2>
+      <br>
+    </div>
   </div>
 
-  <div>
-  {{p.subject}},{{u.name}}
-</div>
-</div>
 </div>
 
-<div class="post-date">
-{{p.created.strftime("%b %d, %Y")}}
-</div>
-</div>
 
-<div class="post-content">
-{{p._render_text | safe}}
 </div>
-<div class="delete_post">
-<form  method="post">
-<input name="delete_post" type="hidden" value="1" />
-<input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-<input type="submit" value="Delete Post" />
-</form>
-</div>
-<div class="error">{{error}}
-</div>
-<div class="comment_textbox">
-<form method="post">
-<div> Comment:
-</div>
-<label>
-<textarea name="comment"></textarea>
-</label>
-<input name="add_comment" type="hidden" value="1" />
-<input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-<input type="submit" value="Add Comment">
-</form>
-</div>
-
-<div>
-<form  method="post">
-<input name="edit_post" type="hidden" value="1" />
-<input name="post_user_id" type="hidden" value="{{p.user_id}}" />
-<input type="submit" value="Edit Post" />
-</form>
-</div>
-
-</div> -->
