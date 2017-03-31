@@ -13,6 +13,7 @@ import time
 class EditPost(BlogHandler):
     @post_exists
     @user_logged_in
+    @user_owns_post
     def get(self, post_id):
 
         if self.user:

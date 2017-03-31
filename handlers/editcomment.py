@@ -15,6 +15,7 @@ class EditComment(BlogHandler):
     @post_exists
     @comment_exists
     @user_logged_in
+    @user_owns_comment
     def get(self, post_id, comment_id):
         if self.user:
             key = db.Key.from_path('Comment', int(comment_id))
