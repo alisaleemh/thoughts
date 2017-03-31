@@ -11,7 +11,10 @@ import time
 
 
 class EditPost(BlogHandler):
+    @post_exists
+    @user_logged_in
     def get(self, post_id):
+
         if self.user:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
@@ -21,6 +24,8 @@ class EditPost(BlogHandler):
         else:
             self.redirect("/blog/%s" % post_id)
 
+    @post_exists
+    @user_logged_in
     def post(self, post_id):
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -31,7 +36,7 @@ class EditPost(BlogHandler):
             p = db.get(key)
             p = Post(key=key, parent=blog_key(), user_id=user_id, subject=subject, content=content)
             p.put()
-            time.sleet(0.2)
+            time.sleep(0.2)
             self.redirect('/blog/%s' % post_id)
         else:
             error = "Please enter both subject and content, please!"

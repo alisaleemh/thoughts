@@ -13,8 +13,11 @@ from decorators import *
 import time
 
 
-class DeleteComment(PostPage):
 
+class DeleteComment(PostPage):
+    @post_exists
+    @comment_exists
+    @user_logged_in
     def get(self, post_id, comment_id):
         if not self.user:
             return self.redirect('/blog')

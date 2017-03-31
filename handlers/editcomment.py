@@ -10,7 +10,11 @@ from helpers import *
 from decorators import *
 import time
 
+
 class EditComment(BlogHandler):
+    @post_exists
+    @comment_exists
+    @user_logged_in
     def get(self, post_id, comment_id):
         if self.user:
             key = db.Key.from_path('Comment', int(comment_id))
@@ -20,6 +24,9 @@ class EditComment(BlogHandler):
         else:
             self.redirect("/blog/%s" % post_id)
 
+    @post_exists
+    @comment_exists
+    @user_logged_in
     def post(self, post_id, comment_id):
         comment = self.request.get('comment')
         user_id = self.read_secure_cookie('user_id')
@@ -35,4 +42,4 @@ class EditComment(BlogHandler):
             return self.redirect('/blog/%s' % post_id)
         else:
             error = "Please enter a comment!"
-            return self.render("editpost.html", comment=comment, error=error)
+            return self.render("editcomment.html", comment=comment, error=error)

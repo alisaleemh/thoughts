@@ -13,6 +13,7 @@ import time
 
 
 class LikePost(PostPage):
+    @user_logged_in
     @post_exists
     def get(self, post_id):
         l = Like.by_post_id(post_id)

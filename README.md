@@ -56,7 +56,7 @@ Follow the steps below to run the app :
    |__ docorators.py
    |__ helpers.py
    |__ index.yaml
-	 |__ README.mdS
+	 |__ README.md
 ```
 
 1. **static:** This directory contains all CSS, JavaScript libraries as well as static images.

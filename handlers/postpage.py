@@ -16,9 +16,9 @@ import time
 class PostPage(BlogHandler):
 
     @post_exists
+    @user_logged_in
     def get(self, post_id, error=None):
-        if not self.user:
-            return self.redirect('/blog')
+
 
         session_user_id = self.read_secure_cookie('user_id')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
