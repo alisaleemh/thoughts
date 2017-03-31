@@ -30,7 +30,9 @@ class EditPost(BlogHandler):
         subject = self.request.get('subject')
         content = self.request.get('content')
         user_id = self.read_secure_cookie('user_id')
-
+        cancel_post = self.request.get('cancel_post')
+        if cancel_post:
+            return self.redirect('/blog/%s' % post_id)
         if subject and content:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             p = db.get(key)

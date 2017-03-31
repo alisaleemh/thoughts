@@ -31,7 +31,7 @@
         <div class="row control-group">
           <div class="form-group col-xs-12 floating-label-form-group controls">
             <label>Post Content</label>
-            <textarea name="content" rows="10" placeholder="Enter your post content " wrap="soft"></textarea>
+            <textarea name="content" rows="7" placeholder="Enter your post content " wrap="soft"></textarea>
           </div>
         </div>
 
@@ -42,19 +42,23 @@
           <strong><div class="text-center">{{error}}!</div></strong>
         </div>
         {% endif %}
-
+      </div>
+    </div>
         <br>
         <div id="success"></div>
         <div class="row">
-          <div class="form-group col-xs-12">
+          <div class="form-group col-xs-6 text-right">
             <input type="submit" value="Edit Post" class="btn btn-default align-right"></input >
           </div>
+      </form>
+      <form method="post" novalidate>
+        <div class="form-group col-xs-6 text-left">
+          <input name="cancel_post" type="hidden" value="1" />
+          <input value="Cancel" type="submit" class="btn btn-warning align-left"></input>
         </div>
       </form>
     </div>
-  </div>
 </div>
-
 <hr>
 
   <!-- <h2>Edit Post</h2>
