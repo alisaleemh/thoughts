@@ -1,8 +1,4 @@
-Model Refactoring:
-Handler Refactoring:
-
-Using decorators:
-
-Breaking down PostPage handler into seperate handlers:
-
-Cancel button for editcomment page: Done, completed
+Added cancel button for editpost.html
+handlers/like.py: Made sure that the current user is not the author of the post
+handlers/editpost.py: Made sure that the current user is the author of the post here
+handlers/editcomment.py: Made sure that the current user is the author of the post here

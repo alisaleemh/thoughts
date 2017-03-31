@@ -26,6 +26,7 @@ class EditPost(BlogHandler):
 
     @post_exists
     @user_logged_in
+    @user_owns_post
     def post(self, post_id):
         subject = self.request.get('subject')
         content = self.request.get('content')

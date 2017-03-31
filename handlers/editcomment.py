@@ -27,6 +27,7 @@ class EditComment(BlogHandler):
     @post_exists
     @comment_exists
     @user_logged_in
+    @user_owns_comment
     def post(self, post_id, comment_id):
         comment = self.request.get('comment')
         user_id = self.read_secure_cookie('user_id')
