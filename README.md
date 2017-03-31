@@ -5,9 +5,9 @@ Thoughts is a multi-user blogging website where peope can share their thoughts a
 # Table of Contents
 1. [Setup and Deployment](#setup)
 2. [Directory Structure](#directory-structure)
-3. [Resources Used](#resources)
+3. [Technologies Used](#technologies)
 
-### <a name="setup"></a>2. How to deploy the app ?
+### <a name="setup"></a>2. Setup and Deployment
 Follow the steps below to run the app :
 
 1. Download and Install the Python SDK for Google App Engine. Follow instuctions at https://cloud.google.com/appengine/downloads
@@ -35,17 +35,17 @@ Follow the steps below to run the app :
       |__ ...
    |__ static
       |__ css  
-						   |__ bootstrap.css
-						   |__ boostrap.min.css
-						   |__ ...
+						 |__ bootstrap.css
+						 |__ boostrap.min.css
+						 |__ ...
       |__ fonts
-			         |__ font-awesome
-							 |__ ...
+			       |__ font-awesome
+		         |__ ...
       |__ img
-						   |__ ...
+						 |__ ...
       |__ js
-							 |__jquery
-							 |__...
+					   |__jquery
+						 |__...
    |__ templates
       |__ base.html
       |__ comment.html
@@ -59,19 +59,20 @@ Follow the steps below to run the app :
 	 |__ README.mdS
 ```
 
-1. **static :** This directory contains all CSS, JavaScript libraries as well as static images.
-2. **views :** This directory contains all the HTML templates.
+1. **static:** This directory contains all CSS, JavaScript libraries as well as static images.
+2. **views:** This directory contains all the HTML templates.
 3. **models:** This directory contains schema definitions for the Google Datastore models.
 4. **handlers:** This directory contains all the handlers handling the requests made by the application.
-5. **app.yaml :** The standard Google App Engine configuration file.
-6. **index.yaml :** This configuration file specifies custom indexes.
-7. **blog.py :** Runs the web application.
-8. **helpers.py :** Contains various helper functions such as encryption and hashing.
-9. **decorators.py :** Contains various decorators essential for application security.
+5. **app.yaml:** The standard Google App Engine configuration file.
+6. **index.yaml:** This configuration file specifies custom indexes.
+7. **blog.py:** Runs the web application.
+8. **helpers.py:** Contains various helper functions such as encryption and hashing.
+9. **decorators.py:** Contains various decorators essential for validation and application security.
 
-### <a name="resources"></a> 4. Resources
+### <a name="technologies"></a> 4. Technologies
 
 * This application uses Google `webapp2` framework. `webapp2` is a light-weight Python web framework compatible with Google App Engine. You can find more information here: https://webapp2.readthedocs.io/en/latest/guide/handlers.html#handlers-101
 * The application utilizes `jinja2` as its templating language. Read more here: http://jinja.pocoo.org/docs/2.9/
+* THe front-end utilized the popular `boostrap` framework. Read more: http://getbootstrap.com/
 * The application utlizes the Google Cloud Datastore as its database. Google Cloud Datastore is a NoSQL database built for automatic scaling. Read more here: https://cloud.google.com/appengine/docs/standard/python/datastore/
 * The application is hosted on Google Cloud Platform. Read more here: https://cloud.google.com/
